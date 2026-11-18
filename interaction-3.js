@@ -30,7 +30,8 @@ rain.createDSP(audioContext, 1024)
         dspNode = node;
         dspNode.connect(audioContext.destination);
 
-        dspNode.setParamValue("/rain/volume", 0);
+        const startVolume = 0.15;
+        dspNode.setParamValue("/rain/volume", startVolume);
         dspNode.setParamValue("/rain/density", 600);
 
         console.log('params: ', dspNode.getParams());
@@ -136,7 +137,8 @@ function playAudio() {
 
         const progress = Math.min(elapsed / duration, 1);
 
-        const volume = progress * maxVolume;
+        
+        const volume = startVolume + progress * (maxVolume - startVolume);
 
         dspNode.setParamValue("/rain/volume", volume);
 
