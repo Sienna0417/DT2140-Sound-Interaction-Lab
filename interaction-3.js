@@ -104,6 +104,7 @@ function getMinMaxParam(address) {
 
 
 let rainStopTimer = null;
+let rainGrowTimer = null;
 
 function playAudio() {
     if (!dspNode) {
@@ -114,18 +115,45 @@ function playAudio() {
         return;
     }
 
-    // Start the rain sound
-    dspNode.setParamValue("/rain/density", 600);
-    dspNode.setParamValue("/rain/volume", 0.6);
-
-    // Stop the rain after 2 seconds
+    // Stop previous timers
+    clearInterval(rainGrowTimer);
     clearTimeout(rainStopTimer);
 
-    rainStopTimer = setTimeout(() => {
-        if (dspNode) {
-            dspNode.setParamValue("/rain/volume", 0);
+    // Set rain density
+    dspNode.setParamValue("/rain/density", 100);
+
+    // Start with no sound
+    dspNode.setParamValue("/rain/volume", 0);
+
+    const startTime = performance.now();
+    const duration = 2000;
+    const maxVolume = 0.6;
+
+    // Gradually increase volume
+    rainGrowTimer = setInterval(() => {
+
+        const elapsed = performance.now() - startTime;
+
+        const progress = Math.min(elapsed / duration, 1);
+
+        const volume = progress * maxVolume;
+
+        dspNode.setParamValue("/rain/volume", volume);
+
+        // Stop increasing after 2 seconds
+        if (progress >= 1) {
+
+            clearInterval(rainGrowTimer);
+
+            // Keep the maximum volume briefly
+            rainStopTimer = setTimeout(() => {
+                if (dspNode) {
+                    dspNode.setParamValue("/rain/volume", 0);
+                }
+            }, 300);
         }
-    }, 2000);
+
+    }, 50);
 }
 
 //==========================================================================================
