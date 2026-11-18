@@ -57,14 +57,13 @@ function accelerationChange(accx, accy, accz) {
 
 let wasPointingUp = false;
 function rotationChange(rotx, roty, rotz) {
-    // Check whether the phone is pointing upward
+   
     const isPointingUp = rotx > 70 && rotx < 110;
 
-    // Play thunder only when entering the upward position
     if (isPointingUp && !wasPointingUp) {
         playAudio(); }
 
-        // Remember the previous state
+        
         wasPointingUp = isPointingUp;
         
 }
