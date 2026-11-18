@@ -30,9 +30,9 @@ rain.createDSP(audioContext, 1024)
         dspNode = node;
         dspNode.connect(audioContext.destination);
 
-        const startVolume = 0.15;
-        dspNode.setParamValue("/rain/volume", startVolume);
-        dspNode.setParamValue("/rain/density", 600);
+    // Keep the rain silent before any interaction
+    dspNode.setParamValue("/rain/volume", 0);
+    dspNode.setParamValue("/rain/density", 600);
 
         console.log('params: ', dspNode.getParams());
         const jsonString = dspNode.getJSON();
@@ -120,8 +120,13 @@ function playAudio() {
     clearInterval(rainGrowTimer);
     clearTimeout(rainStopTimer);
 
+
     // Set rain density
-    dspNode.setParamValue("/rain/density", 100);
+    dspNode.setParamValue("/rain/density", 600);
+
+    // Start with a soft rain sound
+    const startVolume = 0.15;
+    dspNode.setParamValue("/rain/volume", startVolume);
 
     // Start with no sound
     dspNode.setParamValue("/rain/volume", 0);
