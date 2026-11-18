@@ -12,7 +12,7 @@ let dspNodeParams = null;
 let jsonParams = null;
 
 // Change here to ("tuono") depending on your wasm file name
-const dspName = "brass";
+const dspName = "rain";
 const instance = new FaustWasm2ScriptProcessor(dspName);
 
 // output to window or npm package module
@@ -25,10 +25,14 @@ if (typeof module === "undefined") {
 }
 
 // The name should be the same as the WASM file, so change tuono with brass if you use brass.wasm
-brass.createDSP(audioContext, 1024)
+rain.createDSP(audioContext, 1024)
     .then(node => {
         dspNode = node;
         dspNode.connect(audioContext.destination);
+
+        dspNode.setParamValue("/rain/volume", 0);
+        dspNode.setParamValue("/rain/density", 600);
+
         console.log('params: ', dspNode.getParams());
         const jsonString = dspNode.getJSON();
         jsonParams = JSON.parse(jsonString)["ui"][0]["items"];
@@ -58,9 +62,9 @@ function accelerationChange(accx, accy, accz) {
 function rotationChange(rotx, roty, rotz) {
 }
 
+
 function mousePressed() {
-    playAudio(mouseX/windowWidth)
-    // Use this for debugging from the desktop!
+    playAudio();
 }
 
 function deviceMoved() {
@@ -74,7 +78,7 @@ function deviceTurned() {
 function deviceShaken() {
     shaketimer = millis();
     statusLabels[0].style("color", "pink");
-    playAudio();
+    
 }
 
 function getMinMaxParam(address) {
@@ -95,17 +99,100 @@ function getMinMaxParam(address) {
 //
 //==========================================================================================
 
-function playAudio(pressure) {
+
+
+
+
+let rainStopTimer = null;
+
+function playAudio() {
     if (!dspNode) {
         return;
     }
+
     if (audioContext.state === 'suspended') {
         return;
     }
-    console.log(pressure)
-    dspNode.setParamValue("/brass/blower/pressure", pressure)
+
+    // Start the rain sound
+    dspNode.setParamValue("/rain/density", 600);
+    dspNode.setParamValue("/rain/volume", 0.6);
+
+    // Stop the rain after 2 seconds
+    clearTimeout(rainStopTimer);
+
+    rainStopTimer = setTimeout(() => {
+        if (dspNode) {
+            dspNode.setParamValue("/rain/volume", 0);
+        }
+    }, 2000);
 }
 
 //==========================================================================================
+//==========================================================================================
+// FREE FALL DETECTION
+//==========================================================================================
+
+// Remember when free fall starts
+let freeFallStart = null;
+
+// Prevent repeated triggers
+let lastFallTrigger = -Infinity;
+
+// Minimum detected free-fall duration (milliseconds)
+const minFallDuration = 150;
+
+// Listen to the phone's motion sensor
+window.addEventListener("devicemotion", function(event) {
+
+    const acc = event.accelerationIncludingGravity;
+
+    if (!acc ||
+        !Number.isFinite(acc.x) ||
+        !Number.isFinite(acc.y) ||
+        !Number.isFinite(acc.z)) {
+        return;
+    }
+
+    // Total acceleration from all three axes
+    const totalAcceleration = Math.sqrt(
+        acc.x * acc.x +
+        acc.y * acc.y +
+        acc.z * acc.z
+    );
+
+    const now = performance.now();
+
+    // Detect when the phone is almost weightless
+    if (totalAcceleration < 3) {
+
+        if (freeFallStart === null) {
+            freeFallStart = now;
+        }
+
+    } else {
+
+        // Free fall has ended
+        if (freeFallStart !== null) {
+
+            const fallDuration = now - freeFallStart;
+
+            freeFallStart = null;
+
+            // Trigger rain after a sufficiently long free fall
+            if (
+                fallDuration >= minFallDuration &&
+                now - lastFallTrigger > 3000
+            ) {
+
+                lastFallTrigger = now;
+
+                console.log("Free fall detected!");
+
+                playAudio();
+            }
+        }
+    }
+});
 // END
 //==========================================================================================
