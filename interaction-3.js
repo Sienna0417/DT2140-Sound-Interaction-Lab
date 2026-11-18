@@ -168,7 +168,7 @@ let freeFallStart = null;
 let lastFallTrigger = -Infinity;
 
 // Minimum detected free-fall duration (milliseconds)
-const minFallDuration = 150;
+const minFallDuration = 50;
 
 // Listen to the phone's motion sensor
 window.addEventListener("devicemotion", function(event) {
