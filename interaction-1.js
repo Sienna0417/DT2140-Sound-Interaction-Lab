@@ -55,7 +55,18 @@ function accelerationChange(accx, accy, accz) {
     // playAudio()
 }
 
+let wasPointingUp = false;
 function rotationChange(rotx, roty, rotz) {
+    // Check whether the phone is pointing upward
+    const isPointingUp = rotx > 70 && rotx < 110;
+
+    // Play thunder only when entering the upward position
+    if (isPointingUp && !wasPointingUp) {
+        playAudio(); }
+
+        // Remember the previous state
+        wasPointingUp = isPointingUp;
+        
 }
 
 function mousePressed() {
@@ -74,7 +85,6 @@ function deviceTurned() {
 function deviceShaken() {
     shaketimer = millis();
     statusLabels[0].style("color", "pink");
-    playAudio();
 }
 
 function getMinMaxParam(address) {
